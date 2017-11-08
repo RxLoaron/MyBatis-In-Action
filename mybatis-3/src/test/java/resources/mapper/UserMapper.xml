@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+       Copyright 2009-2017 the original author or authors.
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+
+-->
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--namespace:名称空间;指定为接口的全类名-->
+<mapper namespace="mybatisdemo.hellomybatis.dao.UserDao">
+
+
+    <!-- parameterType：参数类型，可以省略，
+	获取自增主键的值：
+		mysql支持自增主键，自增主键值的获取，mybatis也是利用statement.getGenreatedKeys()；
+		useGeneratedKeys="true"；使用自增主键获取主键值策略
+		keyProperty；指定对应的主键属性，也就是mybatis获取到主键值以后，将这个值封装给javaBean的哪个属性
+	-->
+    <insert id="addUser" useGeneratedKeys="true" keyProperty="id" parameterType="mybatisdemo.hellomybatis.beans.User">
+        INSERT INTO
+           tb_user(username,email,sex,dept_id)
+        VALUES
+           (#{userName},#{email},#{sex},#{deptId})
+    </insert>
+
+
+    <!--
+        id：唯一标识
+        resultType：返回值类型
+        #{id}：从传递过来的参数中取出id值
+        -->
+    <resultMap id="userResultMap" type="mybatisdemo.hellomybatis.beans.User">
+        <id column="id" property="id"/>
+        <result column="username" property="userName"/>
+        <result column="dept_id" property="deptId"/>
+        <result column="dept_id" property="dept.id"/>
+        <result column="dept_name" property="dept.deptName"/>
+    </resultMap>
+
+
+    <!--
+		使用association定义关联的单个对象的封装规则；
+	 -->
+    <resultMap id="userDeptResultMap" type="mybatisdemo.hellomybatis.beans.User">
+        <id column="id" property="id"/>
+        <result column="username" property="userName"/>
+        <result column="email" property="email"/>
+        <result column="sex" property="sex"/>
+        <result column="dept_id" property="deptId"/>
+        <!--<result column="dept_id" property="dept.id"/>-->
+        <!--<result column="dept_name" property="dept.deptName"/>-->
+
+        <!-- association可以指定联合的javaBean对象
+             property="dept"：指定哪个属性是联合的对象
+             javaType:指定这个属性对象的类型[不能省略]
+    -->
+        <association property="dept" javaType="mybatisdemo.hellomybatis.beans.Department">
+            <id column="id" property="id"/>
+            <result column="dept_name" property="deptName"/>
+        </association>
+    </resultMap>
+
+    <!--多参数时,参数封装成map-->
+    <!--key为arg0、arg1、、、、、param1、param2.。。。-->
+    <!--使用注解@Param定义参数名-->
+    <select id="getUserByIdAndSex" resultMap="userResultMap">
+        SELECT id,username,email,sex,dept_id from tb_user WHERE id = #{uid} AND  sex = #{sex};
+    </select>
+
+    <select id="getUserById" resultMap="userResultMap">
+        SELECT id,username,email,sex,dept_id from tb_user WHERE id = #{id};
+    </select>
+
+    <select id="getUserByDeptId" resultMap="userResultMap">
+        SELECT id,username,email,sex,dept_id from tb_user WHERE dept_id = #{deptid};
+    </select>
+
+    <select id="getUserWithDeptById" resultMap="userDeptResultMap">
+        SELECT  tbuser.id,tbuser.username,tbuser.email,tbuser.sex,tbuser.dept_id,
+                tbdept.dept_name,tbdept.id
+        from    tb_user tbuser,tb_dept tbdept
+        WHERE   tbuser.dept_id = tbdept.id AND tbuser.id = #{id};
+    </select>
+</mapper>

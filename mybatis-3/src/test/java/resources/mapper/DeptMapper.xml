@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+       Copyright 2009-2017 the original author or authors.
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+
+-->
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--namespace:名称空间;指定为接口的全类名-->
+<mapper namespace="mybatisdemo.hellomybatis.dao.DeptDao">
+
+    <resultMap id="deptResultMap" type="mybatisdemo.hellomybatis.beans.Department">
+        <id column="did" property="id"/>
+        <result column="dept_name" property="deptName"/>
+
+        <!-- 一对多配置，建立集合，集合中存放多表对应的对象 -->
+        <!-- property是实体类中的集合的名字，ofType是集合中存放的对象的全限定名称 -->
+        <collection property="mUserList" ofType="mybatisdemo.hellomybatis.beans.User">
+            <id column="uid" property="id"/>
+            <result column="username" property="userName"/>
+            <result column="dept_id" property="deptId"/>
+            <result column="email" property="email"/>
+            <result column="sex" property="sex"/>
+        </collection>
+    </resultMap>
+    <!--<select id="getDeptById" resultMap="deptResultMap">-->
+    <!--SELECT  tbdept.dept_name,tbdept.id did,-->
+    <!--tbuser.id uid,tbuser.username,tbuser.email,tbuser.sex,tbuser.dept_id-->
+    <!--from    tb_dept tbdept-->
+    <!--LEFT JOIN tb_user tbuser-->
+    <!--ON tbdept.id = tbuser.dept_id-->
+    <!--WHERE   tbdept.id = #{id};-->
+    <!--</select>-->
+
+
+    <!-- collection：分段查询 -->
+
+    <resultMap type="mybatisdemo.hellomybatis.beans.Department" id="deptStep">
+        <id column="id" property="id"/>
+        <id column="dept_name" property="deptName"/>
+        <!-- 扩展：多列的值传递过去：
+			将多列的值封装map传递；
+			column="{key1=column1,key2=column2}"
+		fetchType="lazy"：表示使用延迟加载；
+				- lazy：延迟
+				- eager：立即
+	 -->
+        <collection property="mUserList"
+                    select="mybatisdemo.hellomybatis.dao.UserDao.getUserByDeptId"
+                    column="{deptid=id}" fetchType="lazy"></collection>
+    </resultMap>
+    <select id="getDeptById" resultMap="deptStep">
+        SELECT  id,dept_name
+        FROM tb_dept
+        WHERE   id = #{id};
+    </select>
+
+</mapper>
