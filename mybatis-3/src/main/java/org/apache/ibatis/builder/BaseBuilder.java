@@ -60,6 +60,7 @@ public abstract class BaseBuilder {
         return new HashSet<String>(Arrays.asList(value.split(",")));
     }
 
+
     protected JdbcType resolveJdbcType(String alias) {
         if (alias == null) {
             return null;
