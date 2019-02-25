@@ -1,20 +1,21 @@
 /**
- *    Copyright 2009-2017 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2017 the original author or authors.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS"
+ * BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
  */
 package org.apache.ibatis.binding;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.ibatis.annotations.Flush;
 import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.cursor.Cursor;
@@ -28,29 +29,21 @@ import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.session.SqlSession;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
  * @author Clinton Begin
  * @author Eduardo Macarron
  * @author Lasse Voss
  */
 public class MapperMethod {
-
+    
     private final SqlCommand command;
     private final MethodSignature method;
-
+    
     public MapperMethod(Class<?> mapperInterface, Method method, Configuration config) {
         this.command = new SqlCommand(config, mapperInterface, method);
         this.method = new MethodSignature(config, mapperInterface, method);
     }
-
+    
     public Object execute(SqlSession sqlSession, Object[] args) {
         Object result;
         switch (command.getType()) {
@@ -96,11 +89,12 @@ public class MapperMethod {
         }
         if (result == null && method.getReturnType().isPrimitive() && !method.returnsVoid()) {
             throw new BindingException("Mapper method '" + command.getName()
-                                               + " attempted to return null from a method with a primitive return type (" + method.getReturnType() + ").");
+                                               + " attempted to return null from a method with a primitive return type (" + method
+                    .getReturnType() + ").");
         }
         return result;
     }
-
+    
     private Object rowCountResult(int rowCount) {
         final Object result;
         if (method.returnsVoid()) {
@@ -116,11 +110,12 @@ public class MapperMethod {
             result = rowCount > 0;
         }
         else {
-            throw new BindingException("Mapper method '" + command.getName() + "' has an unsupported return type: " + method.getReturnType());
+            throw new BindingException(
+                    "Mapper method '" + command.getName() + "' has an unsupported return type: " + method.getReturnType());
         }
         return result;
     }
-
+    
     private void executeWithResultHandler(SqlSession sqlSession, Object[] args) {
         MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(command.getName());
         if (void.class.equals(ms.getResultMaps().get(0).getType())) {
@@ -137,7 +132,7 @@ public class MapperMethod {
             sqlSession.select(command.getName(), param, method.extractResultHandler(args));
         }
     }
-
+    
     private <E> Object executeForMany(SqlSession sqlSession, Object[] args) {
         List<E> result;
         Object param = method.convertArgsToSqlCommandParam(args);
@@ -159,7 +154,7 @@ public class MapperMethod {
         }
         return result;
     }
-
+    
     private <T> Cursor<T> executeForCursor(SqlSession sqlSession, Object[] args) {
         Cursor<T> result;
         Object param = method.convertArgsToSqlCommandParam(args);
@@ -172,14 +167,14 @@ public class MapperMethod {
         }
         return result;
     }
-
+    
     private <E> Object convertToDeclaredCollection(Configuration config, List<E> list) {
         Object collection = config.getObjectFactory().create(method.getReturnType());
         MetaObject metaObject = config.newMetaObject(collection);
         metaObject.addAll(list);
         return collection;
     }
-
+    
     @SuppressWarnings("unchecked")
     private <E> Object convertToArray(List<E> list) {
         Class<?> arrayComponentType = method.getReturnType().getComponentType();
@@ -194,7 +189,7 @@ public class MapperMethod {
             return list.toArray((E[]) array);
         }
     }
-
+    
     private <K, V> Map<K, V> executeForMap(SqlSession sqlSession, Object[] args) {
         Map<K, V> result;
         Object param = method.convertArgsToSqlCommandParam(args);
@@ -207,11 +202,11 @@ public class MapperMethod {
         }
         return result;
     }
-
+    
     public static class ParamMap<V> extends HashMap<String, V> {
-
+        
         private static final long serialVersionUID = -2212268410512043556L;
-
+        
         @Override
         public V get(Object key) {
             if (!super.containsKey(key)) {
@@ -219,14 +214,14 @@ public class MapperMethod {
             }
             return super.get(key);
         }
-
+        
     }
-
+    
     public static class SqlCommand {
-
+        
         private final String name;
         private final SqlCommandType type;
-
+        
         public SqlCommand(Configuration configuration, Class<?> mapperInterface, Method method) {
             final String methodName = method.getName();
             final Class<?> declaringClass = method.getDeclaringClass();
@@ -250,15 +245,15 @@ public class MapperMethod {
                 }
             }
         }
-
+        
         public String getName() {
             return name;
         }
-
+        
         public SqlCommandType getType() {
             return type;
         }
-
+        
         private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String methodName,
                                                        Class<?> declaringClass, Configuration configuration) {
             String statementId = mapperInterface.getName() + "." + methodName;
@@ -280,9 +275,9 @@ public class MapperMethod {
             return null;
         }
     }
-
+    
     public static class MethodSignature {
-
+        
         private final boolean returnsMany;
         private final boolean returnsMap;
         private final boolean returnsVoid;
@@ -292,7 +287,7 @@ public class MapperMethod {
         private final Integer resultHandlerIndex;
         private final Integer rowBoundsIndex;
         private final ParamNameResolver paramNameResolver;
-
+        
         public MethodSignature(Configuration configuration, Class<?> mapperInterface, Method method) {
             Type resolvedReturnType = TypeParameterResolver.resolveReturnType(method, mapperInterface);
             if (resolvedReturnType instanceof Class<?>) {
@@ -313,51 +308,51 @@ public class MapperMethod {
             this.resultHandlerIndex = getUniqueParamIndex(method, ResultHandler.class);
             this.paramNameResolver = new ParamNameResolver(configuration, method);
         }
-
+        
         public Object convertArgsToSqlCommandParam(Object[] args) {
             return paramNameResolver.getNamedParams(args);
         }
-
+        
         public boolean hasRowBounds() {
             return rowBoundsIndex != null;
         }
-
+        
         public RowBounds extractRowBounds(Object[] args) {
             return hasRowBounds() ? (RowBounds) args[rowBoundsIndex] : null;
         }
-
+        
         public boolean hasResultHandler() {
             return resultHandlerIndex != null;
         }
-
+        
         public ResultHandler extractResultHandler(Object[] args) {
             return hasResultHandler() ? (ResultHandler) args[resultHandlerIndex] : null;
         }
-
+        
         public String getMapKey() {
             return mapKey;
         }
-
+        
         public Class<?> getReturnType() {
             return returnType;
         }
-
+        
         public boolean returnsMany() {
             return returnsMany;
         }
-
+        
         public boolean returnsMap() {
             return returnsMap;
         }
-
+        
         public boolean returnsVoid() {
             return returnsVoid;
         }
-
+        
         public boolean returnsCursor() {
             return returnsCursor;
         }
-
+        
         private Integer getUniqueParamIndex(Method method, Class<?> paramType) {
             Integer index = null;
             final Class<?>[] argTypes = method.getParameterTypes();
@@ -367,13 +362,14 @@ public class MapperMethod {
                         index = i;
                     }
                     else {
-                        throw new BindingException(method.getName() + " cannot have multiple " + paramType.getSimpleName() + " parameters");
+                        throw new BindingException(
+                                method.getName() + " cannot have multiple " + paramType.getSimpleName() + " parameters");
                     }
                 }
             }
             return index;
         }
-
+        
         private String getMapKey(Method method) {
             String mapKey = null;
             if (Map.class.isAssignableFrom(method.getReturnType())) {
@@ -385,5 +381,5 @@ public class MapperMethod {
             return mapKey;
         }
     }
-
+    
 }
